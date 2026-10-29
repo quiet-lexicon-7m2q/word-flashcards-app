@@ -1,6 +1,7 @@
 {
   "name": "Snow Lexis",
   "short_name": "Snow Lexis",
+  "id": "./",
   "description": "Snow Lexis · 词库之树，枝枝相筑：一个单词一张卡片，释义级标签，艾宾浩斯记忆曲线复习",
   "lang": "zh-CN",
   "start_url": "./index.html",

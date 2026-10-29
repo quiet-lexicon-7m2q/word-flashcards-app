@@ -16,6 +16,7 @@
   const StudyLog = store.StudyLog;
 
   const FRONT_HEIGHT = 320;
+  let installPrompt = null;
 
   /** 正反面高度按窗口自适应：半屏 / 矮窗口时收窄，避免评级按钮被挤出视口 */
   function frontHeight() {
@@ -57,6 +58,54 @@
     box.classList.add('is-show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { box.classList.remove('is-show'); }, 2600);
+  }
+
+  function isStandaloneApp() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  function installGuide() {
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      return '请用 Safari 打开本页，点“分享”，再选“添加到主屏幕”。';
+    }
+    if (/HarmonyOS|OpenHarmony/i.test(ua)) {
+      return '请打开华为浏览器菜单，选择“添加到桌面”或“安装应用”。';
+    }
+    if (/Android/i.test(ua)) {
+      return '请打开浏览器菜单，选择“安装应用”或“添加到主屏幕”。';
+    }
+    return '请在浏览器地址栏右侧或菜单中选择“安装 Snow Lexis”。';
+  }
+
+  function refreshInstallStatus() {
+    const status = document.getElementById('installStatus');
+    if (!status) return;
+    status.textContent = isStandaloneApp()
+      ? '当前已经以 Snow Lexis App 模式运行。'
+      : installGuide();
+    const button = document.querySelector('[data-action="install-app"]');
+    if (button) {
+      button.disabled = isStandaloneApp();
+      button.textContent = isStandaloneApp() ? '已安装' : '安装 Snow Lexis';
+    }
+  }
+
+  function installApp() {
+    if (isStandaloneApp()) {
+      toast('Snow Lexis 已经安装到当前设备');
+      return;
+    }
+    if (!installPrompt) {
+      toast(installGuide());
+      return;
+    }
+    installPrompt.prompt();
+    installPrompt.userChoice.then(function (choice) {
+      toast(choice && choice.outcome === 'accepted' ? '已开始安装 Snow Lexis' : installGuide());
+      installPrompt = null;
+      refreshInstallStatus();
+    });
   }
 
   /**
@@ -1308,6 +1357,21 @@
         accountBody() +
       '</section>' +
 
+      '<section class="set-card" id="sec-install">' +
+        '<h3>安装 App</h3>' +
+        '<p class="set-desc" id="installStatus">正在检测当前设备…</p>' +
+        '<div class="set-actions">' +
+          '<button type="button" class="btn btn-primary" data-action="install-app">安装 Snow Lexis</button>' +
+        '</div>' +
+        '<details class="set-more"><summary>各平台安装方法</summary>' +
+          '<ul class="set-list">' +
+            '<li><b>安卓</b>：Chrome 或 Edge 菜单 → 安装应用。</li>' +
+            '<li><b>鸿蒙</b>：华为浏览器菜单 → 添加到桌面或安装应用。</li>' +
+            '<li><b>iPhone / iPad</b>：Safari → 分享 → 添加到主屏幕。</li>' +
+          '</ul>' +
+        '</details>' +
+      '</section>' +
+
       '<section class="set-card" id="sec-mobile">' +
         '<h3>手机访问</h3>' +
         '<p class="set-desc">手机和电脑连同一个 WiFi，用下面这个地址打开就能用（电脑上的服务窗口保持开着）。</p>' +
@@ -1577,6 +1641,7 @@
       refreshDataStatus();
       probeImageSource();
       loadLanInfo();
+      refreshInstallStatus();
       if (route.name === 'account') scrollToSection('sec-account');
     }
     if (route.name === 'home') maybeStartTour();
@@ -3240,6 +3305,10 @@
     if (!trigger) return;
     const action = trigger.getAttribute('data-action');
 
+    if (action === 'install-app') {
+      installApp();
+      return;
+    }
     if (action === 'open-branch') {
       e.preventDefault();
       navigate('#/library?code=' + encodeURIComponent(trigger.getAttribute('data-code')));
@@ -3799,8 +3868,19 @@
       if (state.tour) renderTour();
     });
     window.addEventListener('scroll', function () { if (state.tour) renderTour(); }, { passive: true });
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      installPrompt = e;
+      refreshInstallStatus();
+    });
+    window.addEventListener('appinstalled', function () {
+      installPrompt = null;
+      toast('Snow Lexis 已安装到设备');
+      refreshInstallStatus();
+    });
     applyStoredUserData();          // 先把「我导入的词」合并进词库，再渲染
     render();
+    refreshInstallStatus();
     // 数据变更 → 自动写入本地备份文件 + 刷新首页的数据安全状态
     store.onChange(function () {
       scheduleBackupFile();
