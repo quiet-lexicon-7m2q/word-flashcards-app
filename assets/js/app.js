@@ -1598,6 +1598,7 @@
     });
     if (segs[0] === 'search') return { name: 'search', params: params };
     if (segs[0] === 'library') return { name: 'library', params: params };
+    if (segs[0] === 'cijing') return { name: 'cijing', params: params };
     if (segs[0] === 'favorites') return { name: 'favorites', params: params };
     if (segs[0] === 'account') return { name: 'account', params: params };
     if (segs[0] === 'settings') return { name: 'settings', params: params };
@@ -1623,6 +1624,7 @@
     const prevY = (samePage && typeof window.scrollY === 'number') ? window.scrollY : 0;
     if (route.name === 'search') view.innerHTML = viewSearch(route.params.q || '');
     else if (route.name === 'library') view.innerHTML = viewLibrary(route.params.code);
+    else if (route.name === 'cijing') view.innerHTML = window.CiJing.view();
     else if (route.name === 'favorites') view.innerHTML = viewFavorites(route.params.tab);
     else if (route.name === 'settings') view.innerHTML = viewSettings();
     else if (route.name === 'account') view.innerHTML = viewSettings();
@@ -2363,6 +2365,7 @@
    * 背诵模式（翻转卡片 + 记忆曲线）
    * ============================================================ */
   function resolveScope(scope) {
+    if (scope && scope.indexOf('cijing:') === 0) return window.CiJing.scopeInfo(scope);
     if (scope === 'fav') {
       return { scope: scope, label: '单词收藏', ids: CollectionStore.ids() };
     }
@@ -2474,7 +2477,7 @@
           '<p>' + (s.meta.scheduled ? '未到复习时间的有 ' + s.meta.scheduled + ' 个单词，可先做一次强制复习。' : '') + '</p>' +
           '<p>' +
             (s.meta.scheduled ? '<button type="button" class="btn btn-primary" data-action="force-review" data-scope="' + esc(s.scope) + '">立即复习全部 ' + s.meta.total + ' 个单词</button> ' : '') +
-            '<a class="btn" href="' + (s.code ? '#/library?code=' + encodeURIComponent(s.code) : '#/') + '">返回</a>' +
+            '<a class="btn" href="' + (s.code ? '#/library?code=' + encodeURIComponent(s.code) : (s.scope.indexOf('cijing:') === 0 ? '#/cijing' : '#/')) + '">返回</a>' +
           '</p>' +
         '</div>';
     }
@@ -2534,7 +2537,7 @@
         '<ul class="result-list">' + next + '</ul>' +
         '<div class="result-actions">' +
           '<button type="button" class="btn btn-primary" data-action="restart-study">再来一轮</button>' +
-          '<a class="btn" href="' + (s.code ? '#/library?code=' + encodeURIComponent(s.code) : (s.scope === 'fav' ? '#/favorites' : '#/')) + '">返回列表</a>' +
+          '<a class="btn" href="' + (s.code ? '#/library?code=' + encodeURIComponent(s.code) : (s.scope.indexOf('cijing:') === 0 ? '#/cijing' : (s.scope === 'fav' ? '#/favorites' : '#/'))) + '">返回列表</a>' +
         '</div>' +
       '</div>';
   }
@@ -3379,7 +3382,7 @@
     }
     if (action === 'exit-study') {
       const s = state.study;
-      const back = s && s.code ? '#/library?code=' + encodeURIComponent(s.code) : (s && s.scope === 'fav' ? '#/favorites' : '#/');
+      const back = s && s.code ? '#/library?code=' + encodeURIComponent(s.code) : (s && s.scope.indexOf('cijing:') === 0 ? '#/cijing' : (s && s.scope === 'fav' ? '#/favorites' : '#/'));
       // 中途退出也记一笔（标"未背完"），否则"今天几轮 / 对错统计"会少算
       if (s && !s.finished && s.results.length) {
         StudyLog.push({
@@ -3736,6 +3739,7 @@
 
   function onChange(e) {
     const t = e.target;
+    window.CiJing.change(e, render);
     if (t && t.id === 'importFile' && t.files && t.files[0]) {
       handleImportFile(t.files[0]);
       t.value = '';
@@ -3748,6 +3752,7 @@
   }
 
   function onInput(e) {
+    window.CiJing.input(e);
     if (e.target && e.target.id === 'impBatch') updateBatchPreview();
     if (e.target && e.target.id === 'impWord') scheduleSingleIpa();
     syncEditorField(e.target);
@@ -3842,6 +3847,7 @@
 
   function init() {
     document.addEventListener('click', onViewClick);
+    document.addEventListener('click', function (e) { window.CiJing.click(e, render); });
     $('#treeModal').addEventListener('click', onTreeClick);
     // 配图加载失败时换成本地 SVG（error 事件不冒泡，必须用捕获阶段）
     $('#view').addEventListener('error', handleImgError, true);
