@@ -1005,3 +1005,16 @@ body.on-study .toast { bottom: 116px; }
 .cj-word-head select { max-width: 95px; padding: 3px 5px; border: 1px solid #cfdae4; border-radius: 6px; background: #fff; color: #50687d; font: inherit; }
 .cj-match { cursor: pointer; }
 .cj-match input { accent-color: #527ea4; }
+.cj-exams { margin-bottom: 20px; padding: 22px 24px; background: #eef5fa; border: 1px solid #d4e3ef; border-radius: 16px; }
+.cj-exams-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.cj-exams-head h2 { font-size: 20px; margin: 0; }
+.cj-exams-head p { color: #627080; margin: 7px 0 0; line-height: 1.6; }
+.cj-exams-body { margin-top: 20px; }
+.cj-exam-selects { display: flex; gap: 14px; flex-wrap: wrap; }
+.cj-exam-selects label { display: flex; align-items: center; gap: 8px; color: #526779; }
+.cj-exam-selects select { min-width: 140px; padding: 9px; border: 1px solid #bfd0de; border-radius: 8px; background: #fff; color: #25394c; font: inherit; }
+.cj-exam-frame { display: block; width: 100%; height: 640px; border: 1px solid #cddce8; border-radius: 10px; background: #fff; }
+.sense-phrases { border-top: 1px solid #e3ebf2; margin-top: 10px; padding-top: 10px; color: #385c79; font-size: 14px; }
+.sense-phrases p { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 5px 0; }
+.sense-phrases p span:last-child { color: #617180; }
+@media (max-width: 720px) { .cj-exams { padding: 18px; } .cj-exams-head { align-items: flex-start; flex-wrap: wrap; } .cj-exam-frame { height: 540px; } }

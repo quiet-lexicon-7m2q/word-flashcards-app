@@ -1491,6 +1491,10 @@
                 'title="播放美式发音（占位音频）">▶ 美</button>' +
             '</span>' +
           '</div>' +
+          (sense.seq === 1 && window.CiJing ? (function () {
+            const phrases = window.CiJing.phrasesFor(word.word);
+            return phrases.length ? '<div class="sense-phrases"><b>词组</b>' + phrases.map(function (p) { return '<p><span>' + esc(p.en) + '</span><span>' + esc(p.zh) + '</span></p>'; }).join('') + '</div>' : '';
+          })() : '') +
           (sense.remark ? '<p class="sense-remark">' + esc(sense.remark) + '</p>' : '') +
         '</div>' +
         '<figure class="sense-figure">' +
